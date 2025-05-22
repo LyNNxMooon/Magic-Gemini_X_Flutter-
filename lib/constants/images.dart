@@ -1,0 +1,1 @@
+const kProfilePlaceHolder = "https://www.pngitem.com/pimgs/b/581-5813504_mystery-person-png.png";
