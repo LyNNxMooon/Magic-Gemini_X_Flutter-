@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:magic_gemini_x_flutter/app.dart';
+import 'package:magic_gemini_x_flutter/firebase_options.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
@@ -7,7 +9,7 @@ void main() async {
 
   await windowManager.ensureInitialized();
 
-   WindowOptions windowOptions = const WindowOptions(
+  WindowOptions windowOptions = const WindowOptions(
     size: Size(1400, 800),
     minimumSize: Size(1400, 800),
     maximumSize: Size(1400, 800),
@@ -21,7 +23,7 @@ void main() async {
     await windowManager.setMaximizable(false);
   });
 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
-
-

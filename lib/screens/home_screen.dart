@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use, avoid_print
+// ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
@@ -48,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ScrollController(initialScrollOffset: 1);
 
   final TextEditingController _textController = TextEditingController();
- 
 
   int? _selectedIndex;
 
@@ -71,6 +70,85 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget appBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Model 1.0",
+          style: TextStyle(color: kFourthColor, fontSize: 18),
+        ),
+        PopupMenuButton(
+          color: kThirdColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: kFourthColor, // Border color
+              width: 0.3, // Border width
+            ),
+          ),
+          elevation: 15,
+          tooltip: "Profile",
+          splashRadius: 20,
+          borderRadius: BorderRadius.circular(20),
+          offset:
+              const Offset(0, 50), // Adjust this to control vertical placement
+
+          onSelected: (value) {
+            if (value == 'logout') {
+              // Handle logout
+            } else if (value == 'settings') {
+              // Open settings
+            }
+          },
+
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'settings',
+              child: SizedBox(
+                width: 300,
+                height: 40,
+                child: Text(
+                  'Settings',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'logout',
+              child: SizedBox(
+                  width: 300,
+                  height: 40,
+                  child: Text(
+                    'Logout',
+                    style: TextStyle(color: Colors.white),
+                  )),
+            ),
+          ],
+          child: Container(
+            width: 35,
+            height: 35,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: CachedNetworkImage(
+                fit: BoxFit.cover,
+                imageUrl: kProfilePlaceHolder,
+                placeholder: (context, url) => CupertinoActivityIndicator(
+                  radius: 10,
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.error,
+                  size: 12,
+                ),
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
   Widget initChatUI() {
     return Container(
       width: MediaQuery.of(context).size.width * 1 - 320,
@@ -78,35 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Model 1.0",
-                style: TextStyle(color: kFourthColor, fontSize: 18),
-              ),
-              Container(
-                width: 35,
-                height: 35,
-                decoration:
-                    BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: CachedNetworkImage(
-                    fit: BoxFit.cover,
-                    imageUrl: kProfilePlaceHolder,
-                    placeholder: (context, url) => CupertinoActivityIndicator(
-                      radius: 10,
-                    ),
-                    errorWidget: (context, url, error) => Icon(
-                      Icons.error,
-                      size: 12,
-                    ),
-                  ),
-                ),
-              )
-            ],
-          ),
+          appBar(),
           Column(
             children: [
               ShaderMask(
@@ -135,11 +185,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const Gap(40),
-            CustomTextField(
-                    textController: _textController,
-                    function: ask,
-                    
-                  )
+              CustomTextField(
+                textController: _textController,
+                function: ask,
+              )
             ],
           ),
           Center(
