@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
 import 'package:magic_gemini_x_flutter/constants/images.dart';
+import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
+import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -53,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _isChatSelected = false;
 
+  bool _isloggedIn = false;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -78,81 +82,198 @@ class _HomeScreenState extends State<HomeScreen> {
           "Model 1.0",
           style: TextStyle(color: kFourthColor, fontSize: 18),
         ),
-        PopupMenuButton(
-          color: kThirdColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: kFourthColor, // Border color
-              width: 0.3, // Border width
-            ),
-          ),
-          elevation: 15,
-          tooltip: "Profile",
-          splashRadius: 20,
-          borderRadius: BorderRadius.circular(20),
-          offset:
-              const Offset(0, 50), // Adjust this to control vertical placement
+        _isloggedIn ? profileBox() : logInButton()
+      ],
+    );
+  }
 
-          onSelected: (value) {
-            if (value == 'logout') {
-              // Handle logout
-            } else if (value == 'settings') {
-              // Open settings
-            }
-          },
+  Widget logInButton() {
+    return GestureDetector(
+      onTap: () => context.navigateToNext(LoginScreen()),
+      child: Container(
+        width: 60,
+        height: 30,
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(15)),
+        child: Center(child: Text("Log in", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),)),
+      ),
+    );
+  }
 
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'settings',
-              child: SizedBox(
-                width: 300,
-                height: 40,
-                child: Text(
-                  'Settings',
-                  style: TextStyle(color: Colors.white),
-                ),
+  Widget profileBox() {
+    return PopupMenuButton(
+      color: kThirdColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: kFourthColor, // Border color
+          width: 0.3, // Border width
+        ),
+      ),
+      elevation: 15,
+      tooltip: "Profile",
+      splashRadius: 20,
+      borderRadius: BorderRadius.circular(20),
+      offset: const Offset(0, 50), // Adjust this to control vertical placement
+
+      onSelected: (value) {
+        // if (value == 'logout') {
+        //   // Handle logout
+        // } else if (value == 'settings') {
+        //   // Open settings
+        // }
+      },
+
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'email',
+          child: Container(
+              padding: EdgeInsets.only(top: 10, left: 10),
+              width: 300,
+              height: 40,
+              child: Text(
+                'lyne.thant@aaapos.com',
+                style: TextStyle(color: Colors.white),
+              )),
+        ),
+        PopupMenuItem(
+          height: 5,
+          value: '',
+          child: Container(
+              padding: EdgeInsets.only(
+                right: 10,
+                left: 10,
               ),
-            ),
-            const PopupMenuItem(
-              value: 'logout',
-              child: SizedBox(
-                  width: 300,
-                  height: 40,
-                  child: Text(
+              width: 300,
+              height: 0.1,
+              child: Divider(
+                thickness: 0.4,
+                color: kFourthColor,
+              )),
+        ),
+        PopupMenuItem(
+          value: 'settings',
+          child: Container(
+              padding: EdgeInsets.only(top: 10, left: 10),
+              width: 300,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const Gap(10),
+                  Text(
+                    'settings',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              )),
+        ),
+        PopupMenuItem(
+          value: 'Terms',
+          child: Container(
+              padding: EdgeInsets.only(top: 10, left: 10),
+              width: 300,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.inventory_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const Gap(10),
+                  Text(
+                    'Terms & Policies',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              )),
+        ),
+        PopupMenuItem(
+          value: 'Notes',
+          child: Container(
+              padding: EdgeInsets.only(top: 10, left: 10),
+              width: 300,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const Gap(10),
+                  Text(
+                    'Release Notes',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              )),
+        ),
+        PopupMenuItem(
+          height: 5,
+          value: '',
+          child: Container(
+              padding: EdgeInsets.only(right: 10, left: 10, top: 5),
+              width: 300,
+              height: 0.1,
+              child: Divider(
+                thickness: 0.4,
+                color: kFourthColor,
+              )),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: Container(
+              padding: EdgeInsets.only(top: 10, left: 10),
+              width: 300,
+              height: 40,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.logout,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  const Gap(10),
+                  Text(
                     'Logout',
                     style: TextStyle(color: Colors.white),
-                  )),
+                  ),
+                ],
+              )),
+        ),
+      ],
+      child: Container(
+        width: 35,
+        height: 35,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: CachedNetworkImage(
+            fit: BoxFit.cover,
+            imageUrl: kProfilePlaceHolder,
+            placeholder: (context, url) => CupertinoActivityIndicator(
+              radius: 10,
             ),
-          ],
-          child: Container(
-            width: 35,
-            height: 35,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: CachedNetworkImage(
-                fit: BoxFit.cover,
-                imageUrl: kProfilePlaceHolder,
-                placeholder: (context, url) => CupertinoActivityIndicator(
-                  radius: 10,
-                ),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.error,
-                  size: 12,
-                ),
-              ),
+            errorWidget: (context, url, error) => Icon(
+              Icons.error,
+              size: 12,
             ),
           ),
-        )
-      ],
+        ),
+      ),
     );
   }
 
   Widget initChatUI() {
     return Container(
       width: MediaQuery.of(context).size.width * 1 - 320,
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 13),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -173,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     TextSpan(
                       text: "M A G i C",
                       style:
-                          TextStyle(fontSize: 50, fontWeight: FontWeight.w700),
+                          TextStyle(fontSize: 50, fontWeight: FontWeight.w600),
                     ),
                     TextSpan(
                       text: "\nGemini x Flutter",
@@ -217,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 color: kSecondaryColor,
                 width: 320,
-                height: 50,
+                height: 60,
                 child: Padding(
                   padding: const EdgeInsets.only(right: 25, left: 5),
                   child: Row(
@@ -242,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(
               width: 320,
-              height: MediaQuery.of(context).size.height * 1 - 50,
+              height: MediaQuery.of(context).size.height * 1 - 60,
               child: ScrollbarTheme(
                 data: ScrollbarThemeData(
                   thumbVisibility: WidgetStateProperty.all(true),
