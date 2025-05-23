@@ -3,7 +3,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
+import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
+import 'package:magic_gemini_x_flutter/BLoC/auth/auth_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
 import 'package:magic_gemini_x_flutter/constants/images.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
@@ -18,6 +22,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final authBloc = context.read<AuthBloc>();
+
   List scrollTest = [
     1,
     2,
@@ -55,8 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _isChatSelected = false;
 
-  bool _isloggedIn = false;
-
   @override
   void dispose() {
     _scrollController.dispose();
@@ -82,7 +86,17 @@ class _HomeScreenState extends State<HomeScreen> {
           "Model 1.0",
           style: TextStyle(color: kFourthColor, fontSize: 18),
         ),
-        _isloggedIn ? profileBox() : logInButton()
+        BlocBuilder<AuthBloc, AuthStates>(
+          builder: (context, state) {
+            if (state is UnAuthenticated) {
+              return logInButton();
+            } else if (state is Authenticated) {
+              return profileBox(state.user.email);
+            } else {
+              return CupertinoActivityIndicator();
+            }
+          },
+        )
       ],
     );
   }
@@ -95,12 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 30,
         decoration: BoxDecoration(
             color: Colors.white, borderRadius: BorderRadius.circular(15)),
-        child: Center(child: Text("Log in", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),)),
+        child: Center(
+            child: Text(
+          "Log in",
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        )),
       ),
     );
   }
 
-  Widget profileBox() {
+  Widget profileBox(String email) {
     return PopupMenuButton(
       color: kThirdColor,
       shape: RoundedRectangleBorder(
@@ -117,9 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
       offset: const Offset(0, 50), // Adjust this to control vertical placement
 
       onSelected: (value) {
-        // if (value == 'logout') {
-        //   // Handle logout
-        // } else if (value == 'settings') {
+        if (value == 'logout') {
+          authBloc.add(UserLogout());
+        }
         //   // Open settings
         // }
       },
@@ -132,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 300,
               height: 40,
               child: Text(
-                'lyne.thant@aaapos.com',
+                email,
                 style: TextStyle(color: Colors.white),
               )),
         ),

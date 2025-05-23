@@ -7,14 +7,14 @@ class LoginTextField extends StatelessWidget {
   const LoginTextField({
     super.key,
     required this.textController,
-    required this.function,
+
     required this.hintText,
     this.isObscure,
     this.suffixIcon
   });
 
   final TextEditingController textController;
-  final Function function;
+
   final String hintText;
   final bool? isObscure;
   final IconButton? suffixIcon;
