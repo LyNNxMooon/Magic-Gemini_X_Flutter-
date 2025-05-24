@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,10 +8,11 @@ import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
-import 'package:magic_gemini_x_flutter/constants/images.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +23,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final authBloc = context.read<AuthBloc>();
+
+  List unLoggedInScrollTest = [];
 
   List scrollTest = [
     1,
@@ -73,7 +75,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: kPrimaryColor,
       body: Row(
-        children: [chatList(), _isChatSelected ? chatUI() : initChatUI()],
+        children: [ BlocBuilder<AuthBloc, AuthStates>(builder: (context, state) {
+          if (state is Authenticated) {
+            return loggedInChatList();
+          } else {
+
+            return unLoggedInChatList();
+          }
+        },), _isChatSelected ? chatUI() : initChatUI()],
       ),
     );
   }
@@ -86,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
           "Model 1.0",
           style: TextStyle(color: kFourthColor, fontSize: 18),
         ),
-        BlocBuilder<AuthBloc, AuthStates>(
+        BlocConsumer<AuthBloc, AuthStates>(
           builder: (context, state) {
             if (state is UnAuthenticated) {
               return logInButton();
@@ -94,6 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
               return profileBox(state.user.email);
             } else {
               return CupertinoActivityIndicator();
+            }
+          },
+          listener: (context, state) {
+            if (state is UnAuthenticated) {
+              showTopSnackBar(
+                  Overlay.of(context),
+                  CustomSnackBar.success(
+                    message: "Log in to load your chats!",
+                  ),
+                );
             }
           },
         )
@@ -267,23 +286,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
       child: Container(
-        width: 35,
-        height: 35,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: CachedNetworkImage(
-            fit: BoxFit.cover,
-            imageUrl: kProfilePlaceHolder,
-            placeholder: (context, url) => CupertinoActivityIndicator(
-              radius: 10,
-            ),
-            errorWidget: (context, url, error) => Icon(
-              Icons.error,
-              size: 12,
-            ),
-          ),
-        ),
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: kThirdColor),
+        child: Center(child: Text( "${email[0]} ${email[1]}".toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: kFourthColor),),)
       ),
     );
   }
@@ -345,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SizedBox();
   }
 
-  Widget chatList() {
+  Widget loggedInChatList() {
     return SizedBox(
         width: 320,
         height: MediaQuery.of(context).size.height * 1,
@@ -396,6 +402,84 @@ class _HomeScreenState extends State<HomeScreen> {
                     controller: _scrollController,
                     children: [
                       ...scrollTest.map(
+                        (e) => ListTile(
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = scrollTest.indexOf(e);
+                            });
+                          },
+                          tileColor: _selectedIndex == scrollTest.indexOf(e)
+                              ? kThirdColor.withOpacity(0.08)
+                              : kSecondaryColor,
+                          splashColor: kThirdColor.withOpacity(0.2),
+                          hoverColor: kThirdColor.withOpacity(0.4),
+                          title: Text(
+                            e.toString(),
+                            style: TextStyle(color: kFourthColor),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ));
+  }
+
+  Widget unLoggedInChatList () {
+    return SizedBox(
+        width: 320,
+        height: MediaQuery.of(context).size.height * 1,
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                color: kSecondaryColor,
+                width: 320,
+                height: 60,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 25, left: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                          onPressed: () {},
+                          icon: Icon(
+                            Icons.search,
+                            color: kFourthColor,
+                          )),
+                      IconButton(
+                          onPressed: () {},
+                          icon: Icon(
+                            Icons.add_card_rounded,
+                            color: kFourthColor,
+                          ))
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              color: kSecondaryColor,
+              width: 320,
+              height: MediaQuery.of(context).size.height * 1 - 60,
+              child: ScrollbarTheme(
+                data: ScrollbarThemeData(
+                  thumbVisibility: WidgetStateProperty.all(true),
+                  thumbColor: WidgetStateProperty.all(kThirdColor),
+                  thickness: WidgetStateProperty.all(10.0),
+                  radius: const Radius.circular(10),
+                ),
+                child: Scrollbar(
+                  controller: _scrollController,
+                  interactive: true,
+                  child: ListView(
+                    controller: _scrollController,
+                    children: [
+                      ...unLoggedInScrollTest.map(
                         (e) => ListTile(
                           onTap: () {
                             setState(() {

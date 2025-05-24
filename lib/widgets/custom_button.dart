@@ -19,7 +19,7 @@ class CustomButton extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border.all(width: 1, color: kFourthColor),
             color: Colors.white, borderRadius: BorderRadius.circular(20)),
-            child: Center(child: Text("Log In", style: TextStyle(color: kSecondaryColor, fontSize: 16, fontWeight: FontWeight.bold),)
+            child: Center(child: Text(functionName, style: TextStyle(color: kSecondaryColor, fontSize: 16, fontWeight: FontWeight.bold),)
             ,),
       ),
     );
