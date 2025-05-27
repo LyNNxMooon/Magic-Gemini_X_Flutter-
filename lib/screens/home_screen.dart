@@ -75,14 +75,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: kPrimaryColor,
       body: Row(
-        children: [ BlocBuilder<AuthBloc, AuthStates>(builder: (context, state) {
-          if (state is Authenticated) {
-            return loggedInChatList();
-          } else {
-
-            return unLoggedInChatList();
-          }
-        },), _isChatSelected ? chatUI() : initChatUI()],
+        children: [
+          BlocBuilder<AuthBloc, AuthStates>(
+            builder: (context, state) {
+              if (state is Authenticated) {
+                return loggedInChatList();
+              } else {
+                return unLoggedInChatList();
+              }
+            },
+          ),
+          _isChatSelected ? chatUI() : initChatUI()
+        ],
       ),
     );
   }
@@ -108,11 +112,11 @@ class _HomeScreenState extends State<HomeScreen> {
           listener: (context, state) {
             if (state is UnAuthenticated) {
               showTopSnackBar(
-                  Overlay.of(context),
-                  CustomSnackBar.success(
-                    message: "Log in to load your chats!",
-                  ),
-                );
+                Overlay.of(context),
+                CustomSnackBar.success(
+                  message: "Log in to load your chats!",
+                ),
+              );
             }
           },
         )
@@ -286,11 +290,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
       child: Container(
-        width: 45,
-        height: 45,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(25), color: kThirdColor),
-        child: Center(child: Text( "${email[0]} ${email[1]}".toUpperCase(), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: kFourthColor),),)
-      ),
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25), color: kThirdColor),
+          child: Center(
+            child: Text(
+              "${email[0]} ${email[1]}".toUpperCase(),
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: kFourthColor),
+            ),
+          )),
     );
   }
 
@@ -332,7 +344,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const Gap(40),
               CustomTextField(
                 textController: _textController,
-                function: ask,
+                function: () {
+                  ask();
+                  setState(() {
+                    _isChatSelected = true;
+                  });
+                },
               )
             ],
           ),
@@ -348,7 +365,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget chatUI() {
-    return SizedBox();
+    return Container(
+      width: MediaQuery.of(context).size.width * 1 - 320,
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          appBar(),
+          Expanded(child: SizedBox()),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: CustomTextField(
+              textController: _textController,
+              function: () {
+                ask();
+                setState(() {
+                  _isChatSelected = true;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget loggedInChatList() {
@@ -375,7 +414,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: kFourthColor,
                           )),
                       IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              _isChatSelected = false;
+                            });
+                          },
                           icon: Icon(
                             Icons.add_card_rounded,
                             color: kFourthColor,
@@ -406,6 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () {
                             setState(() {
                               _selectedIndex = scrollTest.indexOf(e);
+                              _isChatSelected = true;
                             });
                           },
                           tileColor: _selectedIndex == scrollTest.indexOf(e)
@@ -428,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
-  Widget unLoggedInChatList () {
+  Widget unLoggedInChatList() {
     return SizedBox(
         width: 320,
         height: MediaQuery.of(context).size.height * 1,
@@ -452,7 +496,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: kFourthColor,
                           )),
                       IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              _isChatSelected = false;
+                            });
+                          },
                           icon: Icon(
                             Icons.add_card_rounded,
                             color: kFourthColor,
