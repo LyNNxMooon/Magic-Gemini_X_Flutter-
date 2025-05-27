@@ -461,6 +461,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             e.toString(),
                             style: TextStyle(color: kFourthColor),
                           ),
+                          trailing: IconButton(onPressed: () {
+                            
+                          }, icon: Icon(Icons.more_horiz, color: kFourthColor, size: 18,)),
                         ),
                       )
                     ],
