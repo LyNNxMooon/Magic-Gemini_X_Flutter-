@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,9 @@ import 'package:gap/gap.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_states.dart';
+import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
+import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_events.dart';
+import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
@@ -23,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final authBloc = context.read<AuthBloc>();
+  late final chatBloc = context.read<ChatBloc>();
 
   List unLoggedInScrollTest = [];
 
@@ -50,7 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   void ask() {
-    print("Sent");
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+    chatBloc.add(AskGemini(text: _textController.text, uid: uid));
     _textController.clear();
   }
 
@@ -85,7 +91,12 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
-          _isChatSelected ? chatUI() : initChatUI()
+          BlocListener<ChatBloc, ChatStates>(listener: (context, state) {
+            if (state is ChatError)
+            {
+              print(state.message);
+            }
+          }, child: _isChatSelected ? chatUI() : initChatUI(),)
         ],
       ),
     );

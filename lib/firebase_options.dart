@@ -58,6 +58,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '9124077723',
     projectId: 'magic-gemini-65743',
     authDomain: 'magic-gemini-65743.firebaseapp.com',
+    databaseURL: 'https://magic-gemini-65743-default-rtdb.firebaseio.com',
     storageBucket: 'magic-gemini-65743.firebasestorage.app',
   );
 }

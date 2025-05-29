@@ -35,18 +35,20 @@ class DataAgentImpl extends DataAgent {
       //load chats
       List<ContentVO>? contents = await chatListModel.loadChats(userID);
 
-      //Construct Objs
+      //Construct Objs to request to Gemini
       UserTextVO userText = UserTextVO(text: text);
       ContentVO requestedContent =
           ContentVO(role: "user", parts: <UserTextVO>[userText]);
       GenerationConfigVO generationConfig =
           GenerationConfigVO(responseMimeType: "text/plain");
-      GeminiRequestVO request = GeminiRequestVO(
-          contents: <ContentVO>[requestedContent],
-          generationConfig: generationConfig);
 
-      //save first content from user to the local loaded list
+      //Add to the previous contents to keep the conversation with Gemini
       contents!.add(requestedContent);
+      
+      //Final Requesting obj for Gemini
+      GeminiRequestVO request = GeminiRequestVO(
+          contents: contents,
+          generationConfig: generationConfig);
 
       //request to gemini api
       ContentVO geminiContent = await _api

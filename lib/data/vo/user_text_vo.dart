@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 part 'user_text_vo.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class UserTextVO {
   final String text;
 

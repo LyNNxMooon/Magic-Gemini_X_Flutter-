@@ -17,6 +17,6 @@ GeminiRequestVO _$GeminiRequestVOFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$GeminiRequestVOToJson(GeminiRequestVO instance) =>
     <String, dynamic>{
-      'contents': instance.contents,
-      'generationConfig': instance.generationConfig,
+      'contents': instance.contents.map((e) => e.toJson()).toList(),
+      'generationConfig': instance.generationConfig.toJson(),
     };

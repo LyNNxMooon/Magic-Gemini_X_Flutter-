@@ -16,5 +16,5 @@ ChatListVO _$ChatListVOFromJson(Map<String, dynamic> json) => ChatListVO(
 Map<String, dynamic> _$ChatListVOToJson(ChatListVO instance) =>
     <String, dynamic>{
       'uid': instance.uid,
-      'contents': instance.contents,
+      'contents': instance.contents.map((e) => e.toJson()).toList(),
     };

@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:magic_gemini_x_flutter/data/vo/content_vo.dart';
 part 'chat_list_vo.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class ChatListVO {
   final String uid;
   final List<ContentVO> contents;

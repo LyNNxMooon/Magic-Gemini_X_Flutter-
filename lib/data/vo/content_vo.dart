@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:magic_gemini_x_flutter/data/vo/user_text_vo.dart';
 part 'content_vo.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson:  true)
 class ContentVO {
   final String role;
   final List<UserTextVO> parts;

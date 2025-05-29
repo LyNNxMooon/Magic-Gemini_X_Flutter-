@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await windowManager.ensureInitialized();
 
   WindowOptions windowOptions = const WindowOptions(
@@ -22,7 +23,7 @@ void main() async {
     await windowManager.setMaximizable(false);
   });
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
 
   runApp( MyApp());
 }

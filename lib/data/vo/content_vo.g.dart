@@ -15,5 +15,5 @@ ContentVO _$ContentVOFromJson(Map<String, dynamic> json) => ContentVO(
 
 Map<String, dynamic> _$ContentVOToJson(ContentVO instance) => <String, dynamic>{
       'role': instance.role,
-      'parts': instance.parts,
+      'parts': instance.parts.map((e) => e.toJson()).toList(),
     };
