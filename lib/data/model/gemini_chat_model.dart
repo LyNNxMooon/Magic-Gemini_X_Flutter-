@@ -11,9 +11,11 @@ class GeminiChatModel implements GeminiChatRepo {
   final DataAgent _dataAgent = DataAgentImpl();
 
   @override
-  Future<List<ContentVO>> requestToGemini(String text, String uid) async {
+  Future<List<ContentVO>> requestToGemini(
+      String text, String uid, int? chatId) async {
     try {
-      var result = await _dataAgent.requestToGemini(text, uid);
+      var result = await _dataAgent.requestToGemini(
+          text, uid, chatId ?? DateTime.now().millisecondsSinceEpoch);
 
       if (result == null) {
         return <ContentVO>[];

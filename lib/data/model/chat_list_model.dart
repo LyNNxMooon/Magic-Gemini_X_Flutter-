@@ -10,10 +10,10 @@ class ChatListModel implements ChatListRepo {
   final _firebaseAgent = FirebaseChatListRepo();
 
   @override
-  Future<List<ContentVO>?> loadChats(String uid) async {
+  Future<List<ContentVO>?> loadChats(String uid, int chatId) async {
     try {
       
-      var result = await _firebaseAgent.loadChats(uid);
+      var result = await _firebaseAgent.loadChats(uid, chatId);
 
       if (result == null) {
         return <ContentVO>[];

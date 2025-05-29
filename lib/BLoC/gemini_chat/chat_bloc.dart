@@ -15,7 +15,7 @@ class ChatBloc extends Bloc<ChatEvents, ChatStates> {
     emit(ChatLoading());
     try {
       final result =
-          await geminiChatRepo.requestToGemini(event.text, event.uid);
+          await geminiChatRepo.requestToGemini(event.text, event.uid, event.chatId);
 
       emit(ChatLoaded(contents: result));
     } catch (error) {

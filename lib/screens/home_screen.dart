@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void ask() {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    chatBloc.add(AskGemini(text: _textController.text, uid: uid));
+    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: 1748503970003));
     _textController.clear();
   }
 
