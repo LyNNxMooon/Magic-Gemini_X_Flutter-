@@ -34,4 +34,10 @@ class ChatListModel implements ChatListRepo {
       return Future.error(error);
     }
   }
+  
+  @override
+  Future<List<ChatListVO>> loadChatList(String uid) {
+    // TODO: implement loadChatList
+    throw UnimplementedError();
+  }
 }

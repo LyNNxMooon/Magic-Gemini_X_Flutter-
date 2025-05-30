@@ -54,9 +54,9 @@ class _HomeScreenState extends State<HomeScreen> {
     20
   ];
 
-  void ask() {
+  void askGeminiFromInitChat() {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: 1748503970003));
+    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: 1748594291533));
     _textController.clear();
   }
 
@@ -74,6 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    
+    super.didChangeDependencies();
   }
 
   @override
@@ -356,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
               CustomTextField(
                 textController: _textController,
                 function: () {
-                  ask();
+                  askGeminiFromInitChat();
                   setState(() {
                     _isChatSelected = true;
                   });
@@ -389,10 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CustomTextField(
               textController: _textController,
               function: () {
-                ask();
-                setState(() {
-                  _isChatSelected = true;
-                });
+              
               },
             ),
           ),
@@ -503,12 +506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.search,
-                            color: kFourthColor,
-                          )),
+                     SizedBox(),
                       IconButton(
                           onPressed: () {
                             setState(() {

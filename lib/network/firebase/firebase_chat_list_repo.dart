@@ -10,10 +10,10 @@ class FirebaseChatListRepo implements ChatListRepo {
   Future<List<ContentVO>?> loadChats(String uid, int chatId) async {
     try {
       DocumentSnapshot<Map<String, dynamic>> doc = await firestore
-          .collection('chats')
-          .doc(uid) 
-          .collection(chatId.toString()) 
-          .doc('chatlist') 
+            .collection('chats')
+          .doc(uid)
+          .collection('userChats')
+          .doc(chatId.toString())
           .get();
 
       if (!doc.exists || doc.data() == null) {
@@ -22,8 +22,8 @@ class FirebaseChatListRepo implements ChatListRepo {
 
       ChatListVO result = ChatListVO.fromJson(doc.data()!);
       return result.contents;
-    } catch (error) {
-      throw Exception("Error fetching chats: $error");
+    } on FirebaseException catch (error) {
+      return Future.error("Error fetching chats: $error");
     }
   }
 
@@ -33,11 +33,36 @@ class FirebaseChatListRepo implements ChatListRepo {
       await firestore
           .collection('chats')
           .doc(chatList.uid)
-          .collection(chatList.chatId.toString())
-          .doc('chatlist')
-          .set(chatList.toJson());
-    } catch (error) {
-      throw Exception("Error saving chat: $error");
+          .collection('userChats')
+          .doc(chatList.chatId.toString())
+          .set(chatList.toJson(), SetOptions(merge: true));
+    } on FirebaseException catch (error) {
+      return Future.error("Error saving chats: $error");
+    }
+  }
+
+  @override
+  Future<List<ChatListVO>> loadChatList(String uid) async {
+    try {
+      final indexDoc = await firestore
+          .collection('chats')
+          .doc(uid)
+          .collection('userChats')
+          .get();
+
+      if (indexDoc.docs.isEmpty) return [];
+
+      List<ChatListVO> allChats = [];
+
+      for (var doc in indexDoc.docs) {
+        final data = doc.data();
+        final chatVO = ChatListVO.fromJson(data);
+        allChats.add(chatVO);
+      }
+
+      return allChats;
+    } on FirebaseException catch (error) {
+      return Future.error("Error loading chat list : $error");
     }
   }
 }
