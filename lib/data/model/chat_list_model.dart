@@ -12,7 +12,6 @@ class ChatListModel implements ChatListRepo {
   @override
   Future<List<ContentVO>?> loadChats(String uid, int chatId) async {
     try {
-      
       var result = await _firebaseAgent.loadChats(uid, chatId);
 
       if (result == null) {
@@ -20,7 +19,6 @@ class ChatListModel implements ChatListRepo {
       } else {
         return result;
       }
-      
     } on Exception catch (error) {
       return Future.error(error);
     }
@@ -34,10 +32,13 @@ class ChatListModel implements ChatListRepo {
       return Future.error(error);
     }
   }
-  
+
   @override
-  Future<List<ChatListVO>> loadChatList(String uid) {
-    // TODO: implement loadChatList
-    throw UnimplementedError();
+  Future<List<ChatListVO>> loadChatList(String uid) async {
+    try {
+      return await _firebaseAgent.loadChatList(uid);
+    } on Exception catch (error) {
+      return Future.error(error);
+    }
   }
 }

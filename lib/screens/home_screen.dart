@@ -8,6 +8,9 @@ import 'package:gap/gap.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_states.dart';
+import 'package:magic_gemini_x_flutter/BLoC/chat_list/chat_list_bloc.dart';
+import 'package:magic_gemini_x_flutter/BLoC/chat_list/chat_list_events.dart';
+import 'package:magic_gemini_x_flutter/BLoC/chat_list/chat_list_states.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_states.dart';
@@ -28,35 +31,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final authBloc = context.read<AuthBloc>();
   late final chatBloc = context.read<ChatBloc>();
+  late final chatListBloc = context.read<ChatListBloc>();
 
   List unLoggedInScrollTest = [];
 
-  List scrollTest = [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20
-  ];
-
-  void askGeminiFromInitChat() {
+  Future askGeminiFromInitChat() async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: 1748594291533));
+    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: null));
+   
     _textController.clear();
   }
 
@@ -65,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController _textController = TextEditingController();
 
-  int? _selectedIndex;
+  int? _selectedIndex = -1;
 
   bool _isChatSelected = false;
 
@@ -78,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void didChangeDependencies() {
-    
+    //chatListBloc.add(LoadChatList(uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
     super.didChangeDependencies();
   }
 
@@ -88,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: kPrimaryColor,
       body: Row(
         children: [
-          BlocBuilder<AuthBloc, AuthStates>(
+          BlocConsumer<AuthBloc, AuthStates>(
             builder: (context, state) {
               if (state is Authenticated) {
                 return loggedInChatList();
@@ -96,13 +78,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 return unLoggedInChatList();
               }
             },
+            listener: (context, state) {
+              if (state is Authenticated) {
+                chatListBloc.add(LoadChatList(
+                    uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
+              }
+            },
           ),
-          BlocListener<ChatBloc, ChatStates>(listener: (context, state) {
-            if (state is ChatError)
-            {
-              print(state.message);
-            }
-          }, child: _isChatSelected ? chatUI() : initChatUI(),)
+          BlocListener<ChatBloc, ChatStates>(
+            listener: (context, state) {
+              if (state is ChatError) {
+                print(state.message);
+              }
+            },
+            child: _isChatSelected ? chatUI() : initChatUI(),
+          )
         ],
       ),
     );
@@ -361,8 +351,8 @@ class _HomeScreenState extends State<HomeScreen> {
               const Gap(40),
               CustomTextField(
                 textController: _textController,
-                function: () {
-                  askGeminiFromInitChat();
+                function: () async {
+                 await askGeminiFromInitChat();
                   setState(() {
                     _isChatSelected = true;
                   });
@@ -394,9 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(bottom: 15),
             child: CustomTextField(
               textController: _textController,
-              function: () {
-              
-              },
+              function: () {},
             ),
           ),
         ],
@@ -431,6 +419,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             setState(() {
                               _isChatSelected = false;
+                              _selectedIndex = -1;
                             });
                           },
                           icon: Icon(
@@ -442,49 +431,85 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SizedBox(
-              width: 320,
-              height: MediaQuery.of(context).size.height * 1 - 60,
-              child: ScrollbarTheme(
-                data: ScrollbarThemeData(
-                  thumbVisibility: WidgetStateProperty.all(true),
-                  thumbColor: WidgetStateProperty.all(kThirdColor),
-                  thickness: WidgetStateProperty.all(10.0),
-                  radius: const Radius.circular(10),
-                ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  interactive: true,
-                  child: ListView(
-                    controller: _scrollController,
-                    children: [
-                      ...scrollTest.map(
-                        (e) => ListTile(
-                          onTap: () {
-                            setState(() {
-                              _selectedIndex = scrollTest.indexOf(e);
-                              _isChatSelected = true;
-                            });
-                          },
-                          tileColor: _selectedIndex == scrollTest.indexOf(e)
-                              ? kThirdColor.withOpacity(0.08)
-                              : kSecondaryColor,
-                          splashColor: kThirdColor.withOpacity(0.2),
-                          hoverColor: kThirdColor.withOpacity(0.4),
-                          title: Text(
-                            e.toString(),
-                            style: TextStyle(color: kFourthColor),
-                          ),
-                          trailing: IconButton(onPressed: () {
-                            
-                          }, icon: Icon(Icons.more_horiz, color: kFourthColor, size: 18,)),
+            BlocBuilder<ChatListBloc, ChatListStates>(
+              builder: (context, state) {
+                if (state is ChatListLoaded) {
+                  return Container(
+                    color: kSecondaryColor,
+                    width: 320,
+                    height: MediaQuery.of(context).size.height * 1 - 60,
+                    child: ScrollbarTheme(
+                      data: ScrollbarThemeData(
+                        thumbVisibility: WidgetStateProperty.all(true),
+                        thumbColor: WidgetStateProperty.all(kThirdColor),
+                        thickness: WidgetStateProperty.all(10.0),
+                        radius: const Radius.circular(10),
+                      ),
+                      child: Scrollbar(
+                        controller: _scrollController,
+                        interactive: true,
+                        child: ListView(
+                          controller: _scrollController,
+                          padding: EdgeInsets.all(4),
+                          children: [
+                            ...state.chats.map(
+                              (e) => Card(
+                                elevation:
+                                    _selectedIndex == state.chats.indexOf(e)
+                                        ? 4
+                                        : 0,
+                                color: _selectedIndex == state.chats.indexOf(e)
+                                    ? kFifthColor.withOpacity(0.2)
+                                    : kSecondaryColor,
+                                margin: EdgeInsets.symmetric(
+                                    vertical: 2, horizontal: 4),
+                                child: ListTile(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedIndex = state.chats.indexOf(e);
+                                      _isChatSelected = true;
+                                    });
+                                  },
+                                  splashColor: kThirdColor.withOpacity(0.4),
+                                  hoverColor: kThirdColor.withOpacity(0.3),
+                                  title: Text(
+                                    e.contents[0].parts[0].text.length > 20
+                                        ? "${e.contents[0].parts[0].text.substring(0, 20)} ..."
+                                        : e.contents[0].parts[0].text,
+                                    style: TextStyle(color: kFourthColor),
+                                  ),
+                                  trailing: IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      Icons.more_horiz,
+                                      color: kFourthColor,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                      ),
+                    ),
+                  );
+                } else if (state is ChatListError) {
+                  return Center(
+                    child: Text(
+                      state.message,
+                      style: TextStyle(color: kFourthColor),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    width: 320,
+                    height: MediaQuery.of(context).size.height * 1 - 60,
+                    color: kSecondaryColor,
+                  );
+                }
+              },
+            )
           ],
         ));
   }
@@ -506,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                     SizedBox(),
+                      SizedBox(),
                       IconButton(
                           onPressed: () {
                             setState(() {
@@ -543,12 +568,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         (e) => ListTile(
                           onTap: () {
                             setState(() {
-                              _selectedIndex = scrollTest.indexOf(e);
+                              _selectedIndex = unLoggedInScrollTest.indexOf(e);
                             });
                           },
-                          tileColor: _selectedIndex == scrollTest.indexOf(e)
-                              ? kThirdColor.withOpacity(0.08)
-                              : kSecondaryColor,
+                          tileColor:
+                              _selectedIndex == unLoggedInScrollTest.indexOf(e)
+                                  ? kThirdColor.withOpacity(0.08)
+                                  : kSecondaryColor,
                           splashColor: kThirdColor.withOpacity(0.2),
                           hoverColor: kThirdColor.withOpacity(0.4),
                           title: Text(

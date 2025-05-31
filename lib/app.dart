@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
+import 'package:magic_gemini_x_flutter/BLoC/chat_list/chat_list_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
 import 'package:magic_gemini_x_flutter/data/model/auth_model.dart';
+import 'package:magic_gemini_x_flutter/data/model/chat_list_model.dart';
 import 'package:magic_gemini_x_flutter/data/model/gemini_chat_model.dart';
 import 'package:magic_gemini_x_flutter/screens/home_screen.dart';
 
@@ -12,6 +14,7 @@ class MyApp extends StatelessWidget {
 
   final authRepo = AuthModel();
   final geminiChatRepo = GeminiChatModel();
+  final chatListRepo = ChatListModel();
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +25,9 @@ class MyApp extends StatelessWidget {
           ),
           BlocProvider<ChatBloc>(
             create: (context) => ChatBloc(geminiChatRepo: geminiChatRepo),
+          ),
+           BlocProvider<ChatListBloc>(
+            create: (context) => ChatListBloc(chatListRepo: chatListRepo),
           ),
         ],
         child: MaterialApp(
