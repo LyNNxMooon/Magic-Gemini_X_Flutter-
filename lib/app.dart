@@ -24,10 +24,13 @@ class MyApp extends StatelessWidget {
             create: (context) => AuthBloc(authRepo: authRepo)..add(CheckAuth()),
           ),
           BlocProvider<ChatBloc>(
-            create: (context) => ChatBloc(geminiChatRepo: geminiChatRepo),
+            create: (context) => ChatBloc(chatListRepo: chatListRepo),
           ),
-           BlocProvider<ChatListBloc>(
+          BlocProvider<ChatListBloc>(
             create: (context) => ChatListBloc(chatListRepo: chatListRepo),
+          ),
+          BlocProvider<AskGeminiBloc>(
+            create: (context) => AskGeminiBloc(geminiChatRepo: geminiChatRepo),
           ),
         ],
         child: MaterialApp(

@@ -1,10 +1,13 @@
-// ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields
+// ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields, unused_field
+
+import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:lottie/lottie.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_states.dart';
@@ -15,6 +18,7 @@ import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
+import 'package:magic_gemini_x_flutter/data/vo/content_vo.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
@@ -32,15 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late final authBloc = context.read<AuthBloc>();
   late final chatBloc = context.read<ChatBloc>();
   late final chatListBloc = context.read<ChatListBloc>();
-
-  List unLoggedInScrollTest = [];
-
-  Future askGeminiFromInitChat() async {
-    String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
-    chatBloc.add(AskGemini(text: _textController.text, uid: uid, chatId: null));
-   
-    _textController.clear();
-  }
+  late final askGeminiBloc = context.read<AskGeminiBloc>();
 
   final ScrollController _scrollController =
       ScrollController(initialScrollOffset: 1);
@@ -50,6 +46,19 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _selectedIndex = -1;
 
   bool _isChatSelected = false;
+  bool _isViewingChats = false;
+
+  Timer? _delayTimer;
+
+  int? _chatId;
+
+  Future askGeminiFromChat(int? chatId) async {
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? "";
+    askGeminiBloc
+        .add(AskGemini(text: _textController.text, uid: uid, chatId: chatId));
+
+    _textController.clear();
+  }
 
   @override
   void dispose() {
@@ -60,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void didChangeDependencies() {
-    //chatListBloc.add(LoadChatList(uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
     super.didChangeDependencies();
   }
 
@@ -85,14 +93,18 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
           ),
-          BlocListener<ChatBloc, ChatStates>(
-            listener: (context, state) {
-              if (state is ChatError) {
-                print(state.message);
-              }
-            },
-            child: _isChatSelected ? chatUI() : initChatUI(),
-          )
+          BlocListener<AskGeminiBloc, AskToGeminiStates>(
+              listener: (context, state) {
+                if (state is SavedChat) {
+                  chatListBloc.add(LoadChatList(
+                      uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
+                }
+              },
+              child: _isChatSelected && _isViewingChats
+                  ? chatsViewUI()
+                  : _isChatSelected && !_isViewingChats
+                      ? chatUI()
+                      : initChatUI())
         ],
       ),
     );
@@ -352,9 +364,17 @@ class _HomeScreenState extends State<HomeScreen> {
               CustomTextField(
                 textController: _textController,
                 function: () async {
-                 await askGeminiFromInitChat();
                   setState(() {
                     _isChatSelected = true;
+                    _isViewingChats = false;
+                  });
+                  await askGeminiFromChat(null);
+                  _delayTimer = Timer(Duration(seconds: 5), () {
+                    if (mounted) {
+                      setState(() {
+                        _selectedIndex = 0;
+                      });
+                    }
                   });
                 },
               )
@@ -379,17 +399,223 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           appBar(),
-          Expanded(child: SizedBox()),
+          Expanded(
+            child: BlocConsumer<AskGeminiBloc, AskToGeminiStates>(
+              builder: (context, state) {
+                if (state is GeminiThinking) {
+                  return geminiThinkingLoadingWidget();
+                }
+
+                if (state is SavedChat) {
+                  return BlocBuilder<ChatBloc, ChatStates>(
+                    builder: (context, state) {
+                      if (state is ChatLoading) {
+                        return loadingWidget();
+                      }
+
+                      if (state is ChatLoaded) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.115,
+                          ),
+                          child: ListView(
+                            children: state.contents
+                                .map((e) => messageItemView(e))
+                                .toList(),
+                          ),
+                        );
+                      }
+
+                      if (state is ChatError) {
+                        Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            state.message,
+                            style: TextStyle(color: kFourthColor, fontSize: 20),
+                          ),
+                        );
+                      }
+
+                      return SizedBox();
+                    },
+                  );
+                }
+
+                if (state is AskingGeminiError) {
+                  return Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      state.message,
+                      style: TextStyle(color: kFourthColor, fontSize: 20),
+                    ),
+                  );
+                }
+
+                return SizedBox();
+              },
+              listener: (context, state) {
+                if (state is SavedChat) {
+                  _chatId = int.parse(state.chatID);
+                  chatBloc.add(LoadChats(
+                      chatId: state.chatID,
+                      uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
+                }
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(bottom: 15),
             child: CustomTextField(
               textController: _textController,
-              function: () {},
+              function: () {
+                askGeminiFromChat(_chatId);
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget chatsViewUI() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 1 - 320,
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          appBar(),
+          Expanded(child: BlocBuilder<ChatBloc, ChatStates>(
+            builder: (context, state) {
+              if (state is ChatLoading) {
+                return loadingWidget();
+              }
+
+              if (state is ChatLoaded) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width * 0.115,
+                  ),
+                  child: ListView(
+                    children:
+                        state.contents.map((e) => messageItemView(e)).toList(),
+                  ),
+                );
+              }
+
+              if (state is ChatError) {
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    state.message,
+                    style: TextStyle(color: kFourthColor, fontSize: 20),
+                  ),
+                );
+              }
+
+              return SizedBox();
+            },
+          )),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 15),
+            child: CustomTextField(
+              textController: _textController,
+              function: () {
+                askGeminiFromChat(_chatId);
+                setState(() {
+                  _isViewingChats = false;
+                });
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget messageItemView(ContentVO content) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 40),
+      alignment:
+          content.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.only(
+            left: content.role == "user"
+                ? MediaQuery.of(context).size.width * 0.2
+                : 0),
+        padding: content.role == "user"
+            ? EdgeInsets.symmetric(horizontal: 20, vertical: 10)
+            : EdgeInsets.all(0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: content.role == "user"
+              ? kFifthColor.withOpacity(0.2)
+              : Colors.transparent,
+        ),
+        child: Text(
+          content.parts[0].text,
+          style: TextStyle(color: kFourthColor, fontSize: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget geminiThinkingLoadingWidget() {
+    return Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.115,
+            vertical: 60),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 46, right: 40),
+                child: Text(
+                  "T h i n k i n g",
+                  style: TextStyle(
+                      color: kFourthColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(
+                width: 310,
+                height: 130,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 30),
+                  child: LottieBuilder.asset(
+                    "assets/animations/thinking.json",
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ));
+  }
+
+  Widget loadingWidget() {
+    return Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.115,
+            vertical: 60),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Stack(
+            children: [
+              SizedBox(
+                width: 310,
+                height: 130,
+                child: LottieBuilder.asset(
+                  "assets/animations/thinking.json",
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ],
+          ),
+        ));
   }
 
   Widget loggedInChatList() {
@@ -468,6 +694,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     setState(() {
                                       _selectedIndex = state.chats.indexOf(e);
                                       _isChatSelected = true;
+                                      _isViewingChats = true;
+                                      _chatId = e.chatId;
+                                      chatBloc.add(LoadChats(
+                                          chatId: e.chatId.toString(),
+                                          uid: FirebaseAuth
+                                                  .instance.currentUser?.uid ??
+                                              ""));
                                     });
                                   },
                                   splashColor: kThirdColor.withOpacity(0.4),
@@ -515,15 +748,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget unLoggedInChatList() {
-    return SizedBox(
+    return Container(
+        color: kSecondaryColor,
         width: 320,
         height: MediaQuery.of(context).size.height * 1,
         child: Column(
           children: [
             Align(
               alignment: Alignment.topCenter,
-              child: Container(
-                color: kSecondaryColor,
+              child: SizedBox(
                 width: 320,
                 height: 60,
                 child: Padding(
@@ -542,47 +775,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icons.add_card_rounded,
                             color: kFourthColor,
                           ))
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Container(
-              color: kSecondaryColor,
-              width: 320,
-              height: MediaQuery.of(context).size.height * 1 - 60,
-              child: ScrollbarTheme(
-                data: ScrollbarThemeData(
-                  thumbVisibility: WidgetStateProperty.all(true),
-                  thumbColor: WidgetStateProperty.all(kThirdColor),
-                  thickness: WidgetStateProperty.all(10.0),
-                  radius: const Radius.circular(10),
-                ),
-                child: Scrollbar(
-                  controller: _scrollController,
-                  interactive: true,
-                  child: ListView(
-                    controller: _scrollController,
-                    children: [
-                      ...unLoggedInScrollTest.map(
-                        (e) => ListTile(
-                          onTap: () {
-                            setState(() {
-                              _selectedIndex = unLoggedInScrollTest.indexOf(e);
-                            });
-                          },
-                          tileColor:
-                              _selectedIndex == unLoggedInScrollTest.indexOf(e)
-                                  ? kThirdColor.withOpacity(0.08)
-                                  : kSecondaryColor,
-                          splashColor: kThirdColor.withOpacity(0.2),
-                          hoverColor: kThirdColor.withOpacity(0.4),
-                          title: Text(
-                            e.toString(),
-                            style: TextStyle(color: kFourthColor),
-                          ),
-                        ),
-                      )
                     ],
                   ),
                 ),

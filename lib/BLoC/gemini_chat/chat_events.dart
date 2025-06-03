@@ -8,6 +8,12 @@ class AskGemini extends ChatEvents {
   AskGemini({required this.text, required this.uid, required this.chatId});
 }
 
-class LoadChats extends ChatEvents {}
 
-class SaveChat extends ChatEvents {}
+class LoadChats extends ChatEvents {
+
+  final String uid;
+  final String chatId;
+
+  LoadChats({required this.chatId, required this.uid});
+}
+

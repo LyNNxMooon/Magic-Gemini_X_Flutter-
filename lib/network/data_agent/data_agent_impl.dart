@@ -25,7 +25,7 @@ class DataAgentImpl extends DataAgent {
   final chatListModel = ChatListModel();
 
   @override
-  Future<List<ContentVO>?> requestToGemini(String text, String uid, int chatId) async {
+  Future<String> requestToGemini(String text, String uid, int chatId) async {
     try {
 
       //check user
@@ -33,7 +33,7 @@ class DataAgentImpl extends DataAgent {
           uid.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : uid;
    
       //load chats
-      List<ContentVO>? contents = await chatListModel.loadChats(userID, chatId);
+      List<ContentVO>? contents = await chatListModel.loadChats(userID, chatId.toString());
 
       //Construct Objs to request to Gemini
       UserTextVO userText = UserTextVO(text: text);
@@ -68,8 +68,7 @@ class DataAgentImpl extends DataAgent {
       //save list to Firebase
       chatListModel.saveChats(newChatList);
 
-      //return List
-      return contents;
+      return chatId.toString();
     } on Exception catch (error) {
       return Future.error(apiErrorsConfig.throwExceptionForRequest(error));
     }

@@ -7,13 +7,13 @@ class FirebaseChatListRepo implements ChatListRepo {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   @override
-  Future<List<ContentVO>?> loadChats(String uid, int chatId) async {
+  Future<List<ContentVO>?> loadChats(String uid, String chatId) async {
     try {
       DocumentSnapshot<Map<String, dynamic>> doc = await firestore
             .collection('chats')
           .doc(uid)
           .collection('userChats')
-          .doc(chatId.toString())
+          .doc(chatId)
           .get();
 
       if (!doc.exists || doc.data() == null) {
