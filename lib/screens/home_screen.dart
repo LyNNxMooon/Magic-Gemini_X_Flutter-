@@ -369,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _isViewingChats = false;
                   });
                   await askGeminiFromChat(null);
-                  _delayTimer = Timer(Duration(seconds: 5), () {
+                  _delayTimer = Timer(Duration(seconds: 3), () {
                     if (mounted) {
                       setState(() {
                         _selectedIndex = 0;
@@ -415,16 +415,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (state is ChatLoaded) {
                         return Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal:
-                                MediaQuery.of(context).size.width * 0.115,
-                          ),
-                          child: ListView(
-                            children: state.contents
-                                .map((e) => messageItemView(e))
-                                .toList(),
-                          ),
-                        );
+                            padding: EdgeInsets.symmetric(
+                              horizontal:
+                                  MediaQuery.of(context).size.width * 0.115,
+                            ),
+                            child: ListView(
+                              reverse: true,
+                              children:
+                                  state.contents.reversed.toList().asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final content = entry.value;
+                                final isLastMessage =
+                                    index != state.contents.length - 1;
+
+                                return WipeRevealMessage(
+                                  isLastMessage: isLastMessage,
+                                  duration: Duration(milliseconds: 1000),
+                                  child: messageItemView(content),
+                                );
+                              }).toList(),
+                            ));
                       }
 
                       if (state is ChatError) {
@@ -498,8 +508,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     horizontal: MediaQuery.of(context).size.width * 0.115,
                   ),
                   child: ListView(
-                    children:
-                        state.contents.map((e) => messageItemView(e)).toList(),
+                    reverse:  true,
+                    children: state.contents.reversed.toList().asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final content = entry.value;
+                      final isLastMessage = index != state.contents.length - 1;
+
+                      return WipeRevealMessage(
+                        isLastMessage: isLastMessage,
+                        duration: Duration(milliseconds: 1000),
+                        child: messageItemView(content),
+                      );
+                    }).toList(),
                   ),
                 );
               }
@@ -700,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           chatId: e.chatId.toString(),
                                           uid: FirebaseAuth
                                                   .instance.currentUser?.uid ??
-                                              ""));
+                                              ""));                                  
                                     });
                                   },
                                   splashColor: kThirdColor.withOpacity(0.4),
@@ -782,5 +802,92 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ));
+  }
+}
+
+class WipeRevealMessage extends StatefulWidget {
+  final Widget child;
+  final bool isLastMessage;
+  final Duration duration;
+
+  const WipeRevealMessage({
+    super.key,
+    required this.child,
+    required this.isLastMessage,
+    this.duration = const Duration(milliseconds: 20000),
+  });
+
+  @override
+  State<WipeRevealMessage> createState() => _WipeRevealMessageState();
+}
+
+class _WipeRevealMessageState extends State<WipeRevealMessage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
+
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    if (widget.isLastMessage) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _animationController.forward();
+        }
+      });
+    } else {
+      _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(WipeRevealMessage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isLastMessage && !oldWidget.isLastMessage) {
+      _animationController.reset();
+      _animationController.forward();
+    } else if (!widget.isLastMessage && oldWidget.isLastMessage) {
+      _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isLastMessage) {
+      return widget.child;
+    }
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.topCenter,
+            heightFactor: _animation.value,
+            child: widget.child,
+          ),
+        );
+      },
+    );
   }
 }
