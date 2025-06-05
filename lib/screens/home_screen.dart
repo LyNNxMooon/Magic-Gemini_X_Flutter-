@@ -22,9 +22,6 @@ import 'package:magic_gemini_x_flutter/data/vo/content_vo.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -118,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
           "Model 1.0",
           style: TextStyle(color: kFourthColor, fontSize: 18),
         ),
-        BlocConsumer<AuthBloc, AuthStates>(
+        BlocBuilder<AuthBloc, AuthStates>(
           builder: (context, state) {
             if (state is UnAuthenticated) {
               return logInButton();
@@ -128,16 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return CupertinoActivityIndicator();
             }
           },
-          listener: (context, state) {
-            if (state is UnAuthenticated) {
-              showTopSnackBar(
-                Overlay.of(context),
-                CustomSnackBar.success(
-                  message: "Log in to load your chats!",
-                ),
-              );
-            }
-          },
+         
         )
       ],
     );
@@ -394,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget chatUI() {
     return Container(
       width: MediaQuery.of(context).size.width * 1 - 320,
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 9),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -421,8 +409,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: ListView(
                               reverse: true,
-                              children:
-                                  state.contents.reversed.toList().asMap().entries.map((entry) {
+                              children: state.contents.reversed
+                                  .toList()
+                                  .asMap()
+                                  .entries
+                                  .map((entry) {
                                 final index = entry.key;
                                 final content = entry.value;
                                 final isLastMessage =
@@ -508,8 +499,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     horizontal: MediaQuery.of(context).size.width * 0.115,
                   ),
                   child: ListView(
-                    reverse:  true,
-                    children: state.contents.reversed.toList().asMap().entries.map((entry) {
+                    reverse: true,
+                    children: state.contents.reversed
+                        .toList()
+                        .asMap()
+                        .entries
+                        .map((entry) {
                       final index = entry.key;
                       final content = entry.value;
                       final isLastMessage = index != state.contents.length - 1;
@@ -661,17 +656,33 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icons.search,
                             color: kFourthColor,
                           )),
-                      IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _isChatSelected = false;
-                              _selectedIndex = -1;
-                            });
-                          },
-                          icon: Icon(
-                            Icons.add_card_rounded,
-                            color: kFourthColor,
-                          ))
+                      Row(
+                        children: [
+                          IconButton(
+                              onPressed: () {
+                                chatListBloc.add(LoadChatList(
+                                    uid: FirebaseAuth
+                                            .instance.currentUser?.uid ??
+                                        ""));
+                              },
+                              icon: Icon(
+                                Icons.replay_outlined,
+                                color: kFourthColor,
+                              )),
+                          const Gap(10),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isChatSelected = false;
+                                  _selectedIndex = -1;
+                                });
+                              },
+                              icon: Icon(
+                                Icons.add_card_rounded,
+                                color: kFourthColor,
+                              )),
+                        ],
+                      )
                     ],
                   ),
                 ),
@@ -720,7 +731,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           chatId: e.chatId.toString(),
                                           uid: FirebaseAuth
                                                   .instance.currentUser?.uid ??
-                                              ""));                                  
+                                              ""));
                                     });
                                   },
                                   splashColor: kThirdColor.withOpacity(0.4),
@@ -794,12 +805,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icon(
                             Icons.add_card_rounded,
                             color: kFourthColor,
-                          ))
+                          )),
+
+                 
                     ],
                   ),
                 ),
               ),
             ),
+
+            Gap(MediaQuery.of(context).size.height * 0.35),
+            RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(children: [
+                    TextSpan(
+                      text: "L O G I N",
+                      style:
+                          TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: kThirdColor),
+                    ),
+                    TextSpan(
+                      text: "\nTo Load Your Chats!",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: kThirdColor,
+                        fontWeight: FontWeight.w500
+                      ),
+                    )
+                  ]),
+                ),
+           
           ],
         ));
   }

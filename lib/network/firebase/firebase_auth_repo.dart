@@ -9,6 +9,7 @@ class FirebaseAuthRepo implements AuthRepo {
 
   @override
   Future<UserVO?> getCurrentUser() async {
+
     final currentUser = _firebaseAuth.currentUser;
 
     if (currentUser == null) {

@@ -1,3 +1,4 @@
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:magic_gemini_x_flutter/app.dart';
@@ -22,8 +23,6 @@ void main() async {
     await windowManager.setPreventClose(false);
     await windowManager.setMaximizable(false);
   });
-
-
 
   runApp( MyApp());
 }

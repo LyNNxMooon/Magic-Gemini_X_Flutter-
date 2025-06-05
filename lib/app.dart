@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
-import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/chat_list/chat_list_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
 import 'package:magic_gemini_x_flutter/data/model/auth_model.dart';
@@ -21,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
         providers: [
           BlocProvider<AuthBloc>(
-            create: (context) => AuthBloc(authRepo: authRepo)..add(CheckAuth()),
+            create: (context) => AuthBloc(authRepo: authRepo)
           ),
           BlocProvider<ChatBloc>(
             create: (context) => ChatBloc(chatListRepo: chatListRepo),
