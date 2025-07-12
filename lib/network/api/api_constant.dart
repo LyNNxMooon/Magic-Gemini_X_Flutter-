@@ -13,5 +13,5 @@ const kParamKeyForApiKey = "key";
 //value
 
 const apiKey = "";
-const modelID = "gemini-1.5-flash";
+const modelID = "gemini-2.5-flash";
 const generateContentApi = "generateContent";

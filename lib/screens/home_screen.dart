@@ -1,12 +1,13 @@
 // ignore_for_file: deprecated_member_use, avoid_print, prefer_final_fields, unused_field
 
 import 'dart:async';
-
+import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+//import 'package:logger/logger.dart';
 import 'package:lottie/lottie.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/auth/auth_events.dart';
@@ -18,10 +19,12 @@ import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_bloc.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_events.dart';
 import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
+import 'package:magic_gemini_x_flutter/data/vo/chat_list_vo.dart';
 import 'package:magic_gemini_x_flutter/data/vo/content_vo.dart';
 import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -69,6 +72,24 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
   }
 
+  String getDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final other = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(other).inDays;
+
+    if (diff == 0) return "Today";
+    if (diff == 1) return "Yeterday";
+    if (diff <= 7) return "Last 7 days";
+    if (now.year == date.year) {
+      return DateFormat.MMMM().format(date);
+    }
+
+    return "Last Year";
+  }
+
+  final groupedChats = <String, List<ChatListVO>>{};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,6 +106,10 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             listener: (context, state) {
               if (state is Authenticated) {
+                setState(() {
+                  _isChatSelected = false;
+                  _isViewingChats = false;
+                });
                 chatListBloc.add(LoadChatList(
                     uid: FirebaseAuth.instance.currentUser?.uid ?? ""));
               }
@@ -125,7 +150,6 @@ class _HomeScreenState extends State<HomeScreen> {
               return CupertinoActivityIndicator();
             }
           },
-         
         )
       ],
     );
@@ -166,6 +190,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
       onSelected: (value) {
         if (value == 'logout') {
+          setState(() {
+            _isChatSelected = false;
+            _isViewingChats = false;
+          });
           authBloc.add(UserLogout());
         }
         //   // Open settings
@@ -357,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _isViewingChats = false;
                   });
                   await askGeminiFromChat(null);
-                  _delayTimer = Timer(Duration(seconds: 3), () {
+                  _delayTimer = Timer(Duration(seconds: 4), () {
                     if (mounted) {
                       setState(() {
                         _selectedIndex = 0;
@@ -691,6 +719,21 @@ class _HomeScreenState extends State<HomeScreen> {
             BlocBuilder<ChatListBloc, ChatListStates>(
               builder: (context, state) {
                 if (state is ChatListLoaded) {
+
+                   groupedChats.clear();
+
+                  for (ChatListVO chat in state.chats) {
+                    final label = getDateLabel(chat.timestamp);
+                    groupedChats.putIfAbsent(label, () => []).add(chat);
+                  }
+
+                  final sortedLabels = groupedChats.keys.toList()
+                    ..sort((a, b) {
+                      final dateA = groupedChats[a]!.first.timestamp;
+                      final dateB = groupedChats[b]!.first.timestamp;
+                      return dateB.compareTo(dateA);
+                    });
+
                   return Container(
                     color: kSecondaryColor,
                     width: 320,
@@ -705,55 +748,78 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Scrollbar(
                         controller: _scrollController,
                         interactive: true,
-                        child: ListView(
+                        child: ListView.builder(
                           controller: _scrollController,
                           padding: EdgeInsets.all(4),
-                          children: [
-                            ...state.chats.map(
-                              (e) => Card(
-                                elevation:
-                                    _selectedIndex == state.chats.indexOf(e)
-                                        ? 4
-                                        : 0,
-                                color: _selectedIndex == state.chats.indexOf(e)
-                                    ? kFifthColor.withOpacity(0.2)
-                                    : kSecondaryColor,
-                                margin: EdgeInsets.symmetric(
-                                    vertical: 2, horizontal: 4),
-                                child: ListTile(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedIndex = state.chats.indexOf(e);
-                                      _isChatSelected = true;
-                                      _isViewingChats = true;
-                                      _chatId = e.chatId;
-                                      chatBloc.add(LoadChats(
-                                          chatId: e.chatId.toString(),
-                                          uid: FirebaseAuth
-                                                  .instance.currentUser?.uid ??
-                                              ""));
-                                    });
-                                  },
-                                  splashColor: kThirdColor.withOpacity(0.4),
-                                  hoverColor: kThirdColor.withOpacity(0.3),
-                                  title: Text(
-                                    e.contents[0].parts[0].text.length > 20
-                                        ? "${e.contents[0].parts[0].text.substring(0, 20)} ..."
-                                        : e.contents[0].parts[0].text,
-                                    style: TextStyle(color: kFourthColor),
-                                  ),
-                                  trailing: IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(
-                                      Icons.more_horiz,
-                                      color: kFourthColor,
-                                      size: 18,
+                          itemCount: sortedLabels.length,
+                          itemBuilder: (context, index) {
+                            final label = sortedLabels[index];
+                            final chatsUnderLabel = groupedChats[label]!;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text(
+                                    label,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Color.fromARGB(255, 128, 127, 127),
+                                      
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ],
+                                ...chatsUnderLabel.map(
+                                  (e) => Card(
+                                    elevation:
+                                        _selectedIndex == state.chats.indexOf(e)
+                                            ? 4
+                                            : 0,
+                                    color:
+                                        _selectedIndex == state.chats.indexOf(e)
+                                            ? kFifthColor.withOpacity(0.2)
+                                            : kSecondaryColor,
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 2, horizontal: 4),
+                                    child: ListTile(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedIndex =
+                                              state.chats.indexOf(e);
+                                          _isChatSelected = true;
+                                          _isViewingChats = true;
+                                          _chatId = e.chatId;
+                                          chatBloc.add(LoadChats(
+                                              chatId: e.chatId.toString(),
+                                              uid: FirebaseAuth.instance
+                                                      .currentUser?.uid ??
+                                                  ""));
+                                        });
+                                      },
+                                      splashColor: kThirdColor.withOpacity(0.4),
+                                      hoverColor: kThirdColor.withOpacity(0.3),
+                                      title: Text(
+                                        e.contents[0].parts[0].text.length > 20
+                                            ? "${e.contents[0].parts[0].text.substring(0, 20)} ..."
+                                            : e.contents[0].parts[0].text,
+                                        style: TextStyle(color: kFourthColor),
+                                      ),
+                                      trailing: IconButton(
+                                        onPressed: () {},
+                                        icon: Icon(
+                                          Icons.more_horiz,
+                                          color: kFourthColor,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const Gap(16)
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -806,34 +872,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icons.add_card_rounded,
                             color: kFourthColor,
                           )),
-
-                 
                     ],
                   ),
                 ),
               ),
             ),
-
             Gap(MediaQuery.of(context).size.height * 0.35),
             RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(children: [
-                    TextSpan(
-                      text: "L O G I N",
-                      style:
-                          TextStyle(fontSize: 30, fontWeight: FontWeight.w700, color: kThirdColor),
-                    ),
-                    TextSpan(
-                      text: "\nTo Load Your Chats!",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: kThirdColor,
-                        fontWeight: FontWeight.w500
-                      ),
-                    )
-                  ]),
+              textAlign: TextAlign.center,
+              text: TextSpan(children: [
+                TextSpan(
+                  text: "L O G I N",
+                  style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: kThirdColor),
                 ),
-           
+                TextSpan(
+                  text: "\nTo Load Your Chats!",
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: kThirdColor,
+                      fontWeight: FontWeight.w500),
+                )
+              ]),
+            ),
           ],
         ));
   }

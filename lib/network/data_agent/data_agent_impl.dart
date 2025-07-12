@@ -63,7 +63,7 @@ class DataAgentImpl extends DataAgent {
       contents.add(geminiContent);
 
       //create new chat list with updated content list
-      ChatListVO newChatList = ChatListVO(uid: userID, chatId: chatId ,contents: contents);
+      ChatListVO newChatList = ChatListVO(uid: userID, chatId: chatId ,contents: contents, timestamp: DateTime.now());
 
       //save list to Firebase
       chatListModel.saveChats(newChatList);
