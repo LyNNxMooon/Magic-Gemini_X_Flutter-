@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -14,25 +12,28 @@ import 'package:magic_gemini_x_flutter/widgets/login_text_field.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.toggleScreens});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key, required this.toggleScreens});
 
-    final void Function()? toggleScreens;
+  final void Function()? toggleScreens;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isPasswordObscured = true;
-  late final authBloc = context.read<AuthBloc>();
+  late final registerBloc = context.read<RegisterBloc>();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -40,9 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: kPrimaryColor,
-        body: BlocListener<AuthBloc, AuthStates>(
+        body: BlocListener<RegisterBloc, RegistrationStates>(
             listener: (context, state) {
-              if (state is UnAuthenticated) {
+              if (state is RegisterFailed) {
                 showTopSnackBar(
                   Overlay.of(context),
                   CustomSnackBar.error(
@@ -51,16 +52,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 );
               }
 
-              if (state is Authenticated) {
+              if (state is RegisterSuccessful) {
                 showTopSnackBar(
                   Overlay.of(context),
                   CustomSnackBar.success(
-                    message: "Successfully Logged in!",
+                    message: state.message,
                   ),
                 );
                 _emailController.clear();
                 _passwordController.clear();
-                context.navigateBack();
+                _confirmPasswordController.clear();
+                widget.toggleScreens;
               }
             },
             child: Center(
@@ -102,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                       text: TextSpan(children: [
                         TextSpan(
-                          text: "L O G i N",
+                          text: "R E G I S T E R",
                           style: TextStyle(
                               fontSize: 50, fontWeight: FontWeight.w600),
                         ),
@@ -144,25 +146,58 @@ class _LoginScreenState extends State<LoginScreen> {
                               )),
                       textController: _passwordController,
                       hintText: "Password"),
+                  const Gap(15),
+                  LoginAndRegisterTextField(
+                      isObscure: _isPasswordObscured,
+                      suffixIcon: _isPasswordObscured
+                          ? IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
+                              },
+                              icon: Icon(
+                                Icons.visibility_off,
+                                color: kFourthColor,
+                              ))
+                          : IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordObscured = !_isPasswordObscured;
+                                });
+                              },
+                              icon: Icon(
+                                Icons.visibility,
+                                color: kFourthColor,
+                              )),
+                      textController: _confirmPasswordController,
+                      hintText: "Confirm Password"),
                   const Gap(40),
-                  BlocBuilder<AuthBloc, AuthStates>(
+                  BlocBuilder<RegisterBloc, RegistrationStates>(
                     builder: (context, state) {
-                      if (state is AuthLoading) {
+                      if (state is RegistrationLoading) {
                         return CustomLoadingButtton();
                       } else {
                         return CustomButton(
-                          functionName: "Log in",
+                          functionName: "Register",
                           function: () {
-                            authBloc.add(UserLogin(
+                            registerBloc.add(RegisterUser(
                                 email: _emailController.text,
-                                password: _passwordController.text));
+                                password: _passwordController.text,
+                                confirmPassword:
+                                    _confirmPasswordController.text));
                           },
                         );
                       }
                     },
                   ),
                   const Gap(10),
-                  TextButton(onPressed: widget.toggleScreens, child: Text("Don't have an account? Sign up", style: TextStyle(color: Colors.blue),)),
+                  TextButton(
+                      onPressed: widget.toggleScreens,
+                      child: Text(
+                        "Already have an account? Log In",
+                        style: TextStyle(color: Colors.blue),
+                      )),
                   Expanded(
                     child: Align(
                       alignment: Alignment.bottomCenter,

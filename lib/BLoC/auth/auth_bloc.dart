@@ -80,3 +80,29 @@ class AuthBloc extends Bloc<AuthEvents, AuthStates> {
     }
   }
 }
+
+class RegisterBloc extends Bloc<AuthEvents, RegistrationStates> {
+  final AuthRepo authRepo;
+
+  RegisterBloc({required this.authRepo}) : super(RegistrationInital()) {
+    on<RegisterUser>(_onUserRegister);
+  }
+
+  Future<void> _onUserRegister(
+      RegisterUser event, Emitter<RegistrationStates> emit) async {
+    try {
+      emit(RegistrationLoading());
+
+      if (event.password != event.confirmPassword) {
+        emit(RegisterFailed("Passwords do not match!"));
+      } else {
+        await authRepo.registerWithEmailAndPassword(
+            event.email, event.password);
+        emit(RegisterSuccessful(
+            "Registration successful! Login to load your chats!"));
+      }
+    } catch (error) {
+      emit(RegisterFailed('$error'));
+    }
+  }
+}

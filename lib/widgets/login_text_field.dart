@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
 
-class LoginTextField extends StatelessWidget {
-  const LoginTextField({
+class LoginAndRegisterTextField extends StatelessWidget {
+  const LoginAndRegisterTextField({
     super.key,
     required this.textController,
 

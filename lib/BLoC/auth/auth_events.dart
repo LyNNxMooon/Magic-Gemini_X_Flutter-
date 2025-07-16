@@ -11,6 +11,15 @@ class UserLogin extends AuthEvents {
   UserLogin({required this.email, required this.password});
 }
 
+class RegisterUser  extends AuthEvents {
+  final String email;
+  final String password;
+  final String confirmPassword;
+
+  RegisterUser({required this.email, required this.password, required this.confirmPassword});
+
+}
+
 class LoadUser extends AuthEvents {}
 
 class UserLogout extends AuthEvents {}

@@ -17,3 +17,23 @@ class UnAuthenticated extends AuthStates {
 
   UnAuthenticated (this.message);
 }
+
+//for registration
+
+abstract class RegistrationStates {}
+
+class RegistrationInital extends RegistrationStates {}
+
+class RegistrationLoading extends RegistrationStates {}
+
+class RegisterSuccessful extends RegistrationStates {
+  final String message;
+
+  RegisterSuccessful (this.message);
+}
+
+class RegisterFailed extends RegistrationStates {
+  final String message;
+
+  RegisterFailed (this.message);
+}

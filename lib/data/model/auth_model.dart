@@ -13,8 +13,6 @@ class AuthModel extends AuthRepo {
     try {
       UserVO? user = await _firebaseAgent.getCurrentUser();
 
-     
-
       if (user != null && user.email.isEmpty) {
         user.email = "invalid user";
       }
@@ -48,6 +46,16 @@ class AuthModel extends AuthRepo {
   Future<void> logout() async {
     try {
       await _firebaseAgent.logout();
+    } on Exception catch (error) {
+      return Future.error(error);
+    }
+  }
+
+  @override
+  Future<void> registerWithEmailAndPassword(
+      String email, String password) async {
+    try {
+      await _firebaseAgent.registerWithEmailAndPassword(email, password);
     } on Exception catch (error) {
       return Future.error(error);
     }

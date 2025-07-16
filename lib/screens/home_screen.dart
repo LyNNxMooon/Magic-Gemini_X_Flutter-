@@ -21,7 +21,7 @@ import 'package:magic_gemini_x_flutter/BLoC/gemini_chat/chat_states.dart';
 import 'package:magic_gemini_x_flutter/constants/colors.dart';
 import 'package:magic_gemini_x_flutter/data/vo/chat_list_vo.dart';
 import 'package:magic_gemini_x_flutter/data/vo/content_vo.dart';
-import 'package:magic_gemini_x_flutter/screens/login_screen.dart';
+import 'package:magic_gemini_x_flutter/screens/auth_screen.dart';
 import 'package:magic_gemini_x_flutter/utils/navigation_extension.dart';
 import 'package:magic_gemini_x_flutter/widgets/custom_text_field.dart';
 
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget logInButton() {
     return GestureDetector(
-      onTap: () => context.navigateToNext(LoginScreen()),
+      onTap: () => context.navigateToNext(AuthScreen()),
       child: Container(
         width: 60,
         height: 30,

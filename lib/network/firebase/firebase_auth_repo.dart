@@ -9,7 +9,6 @@ class FirebaseAuthRepo implements AuthRepo {
 
   @override
   Future<UserVO?> getCurrentUser() async {
-
     final currentUser = _firebaseAuth.currentUser;
 
     if (currentUser == null) {
@@ -49,5 +48,18 @@ class FirebaseAuthRepo implements AuthRepo {
   @override
   Future<void> logout() async {
     await _firebaseAuth.signOut();
+  }
+
+  //register user
+
+  @override
+  Future<void> registerWithEmailAndPassword(
+      String email, String password) async {
+    try {
+      await _firebaseAuth.createUserWithEmailAndPassword(
+          email: email, password: password);
+    } catch (error) {
+      throw Exception("Registration failed: $error");
+    }
   }
 }
