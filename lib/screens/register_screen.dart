@@ -62,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _emailController.clear();
                 _passwordController.clear();
                 _confirmPasswordController.clear();
-                widget.toggleScreens;
+                context.navigateBack();
               }
             },
             child: Center(

@@ -99,7 +99,7 @@ class RegisterBloc extends Bloc<AuthEvents, RegistrationStates> {
         await authRepo.registerWithEmailAndPassword(
             event.email, event.password);
         emit(RegisterSuccessful(
-            "Registration successful! Login to load your chats!"));
+            "Registration successful!"));
       }
     } catch (error) {
       emit(RegisterFailed('$error'));
